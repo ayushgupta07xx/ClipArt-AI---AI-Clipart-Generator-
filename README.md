@@ -1,212 +1,175 @@
-# ✨ Clipart AI — Multi-Style Clipart Generator
+# ClipArt AI — AI Clipart Generator
 
-Transform any photo into 5 AI-generated art styles simultaneously.
-
-**Built for**: Frontend Assignment — AI Clipart Generator  
-**Platform**: Android (React Native + Expo)  
-**APK**: [Google Drive Link — add after build]  
-**Screen Recording**: [Google Drive Link — add after recording]
+Transform any face photo into 5 distinct art styles using AI. Built as a production-quality Android app in 72 hours.
 
 ---
 
-## Screenshots
+## Links
 
-> Add screenshots after running the app
-
----
-
-## Setup Guide
-
-### Prerequisites
-
-- Node.js 18+
-- Expo CLI: `npm install -g expo@latest`
-- EAS CLI: `npm install -g eas-cli`
-- Vercel CLI: `npm install -g vercel`
-- A [Replicate](https://replicate.com) account (free — no credit card needed for limited usage)
-- A [Vercel](https://vercel.com) account (free tier)
+- **APK Download:** [https://drive.google.com/file/d/1q9ELkmVCZnSpS2bW8RE_7YDF6e7Qh0aN/view?usp=drivesdk]
+- **Screen Recording:** [https://drive.google.com/file/d/1s2BFGYQmI7xn0WCK6aAKzvRPminSoFSB/view?usp=drivesdk]
+- **GitHub:** [ClipArt AI](https://github.com/ayushgupta07xx/ClipArt-AI---AI-Clipart-Generator-)
+- **Backend:** Deployed on Vercel
 
 ---
 
-### Step 1 — Deploy the Backend
+## Tech Stack
 
-```bash
-cd backend
-vercel deploy --prod
-```
-
-When prompted:
-- Set up and deploy? **Yes**
-- Link to existing project? **No**
-- Project name: **clipart-ai-backend**
-- Directory: **./**
-
-After deploy, go to your **Vercel Dashboard → Project → Settings → Environment Variables** and add:
-
-| Key | Value |
-|-----|-------|
-| `REPLICATE_API_KEY` | Your key from https://replicate.com/account/api-tokens |
-
-Then **redeploy** so the env var takes effect:
-```bash
-vercel --prod
-```
-
-Your backend URL will be something like: `https://clipart-ai-backend.vercel.app`
+| Layer | Choice |
+|---|---|
+| Mobile | React Native (Expo SDK 54) |
+| Routing | Expo Router |
+| Backend | Node.js serverless functions on Vercel |
+| AI Generation | Replicate — InstantID style transfer model |
+| Background Removal | remove.bg API |
+| Image Processing | expo-image-manipulator |
 
 ---
 
-### Step 2 — Configure the Mobile App
+## Setup
 
-Open `mobile/constants/index.ts` and update line 2:
-
-```ts
-export const BACKEND_URL = 'https://clipart-ai-backend.vercel.app'; // ← your actual URL
-```
-
----
-
-### Step 3 — Install Dependencies & Run
-
+### Mobile
 ```bash
 cd mobile
-npm install
+npm install --legacy-peer-deps
 npx expo start
 ```
 
-Scan the QR code with **Expo Go** on your Android device.
-
-> **Important**: Your phone and computer must be on the **same Wi-Fi network**.
-
----
-
-### Step 4 — Build APK for Submission
-
+### Backend
 ```bash
-cd mobile
-eas login           # log in with your Expo account
-eas build:configure # first time only — creates project on expo.dev
-eas build --platform android --profile preview
-```
-
-EAS builds in the cloud (~10–15 mins). Download the `.apk` from the link it provides, upload to Google Drive, and update the README link above.
-
----
-
-## Project Structure
-
-```
-clipart-project/
-├── backend/
-│   ├── api/
-│   │   ├── generate.js     # POST — starts a Replicate prediction
-│   │   └── status.js       # GET  — polls prediction status
-│   ├── vercel.json         # CORS headers + function config
-│   └── package.json
-│
-└── mobile/
-    ├── app/
-    │   ├── _layout.tsx     # Expo Router stack navigator
-    │   ├── index.tsx       # Home — photo upload screen
-    │   └── results.tsx     # Results — 5-style grid screen
-    ├── components/
-    │   ├── StyleResultCard.tsx   # Card: image + save/share actions
-    │   └── SkeletonCard.tsx      # Pulsing loading placeholder
-    ├── hooks/
-    │   └── useGeneration.ts      # Full prediction lifecycle per style
-    ├── services/
-    │   └── api.ts                # Typed backend API wrappers
-    ├── store/
-    │   └── imageStore.ts         # Singleton: passes image between screens
-    ├── constants/
-    │   └── index.ts              # Style configs + BACKEND_URL
-    ├── app.json
-    ├── eas.json
-    └── package.json
+cd backend
+# Create .env.local with:
+# REPLICATE_API_TOKEN=your_key
+# REMOVE_BG_API_KEY=your_key
+vercel --prod
 ```
 
 ---
 
-## Tech Decisions
+## Features Built
 
-### React Native + Expo 51
-Chosen over Native Android (Kotlin) because:
-- Faster iteration speed — critical under 72-hour constraint
-- Expo's managed workflow handles camera, gallery, media library, and file system permissions out of the box
-- Expo Router gives file-based navigation with zero config
-- EAS Build produces a real APK without needing Android Studio locally
+### Core
+- **Camera + Gallery upload** with client-side resize to 512×512 and JPEG compression before any network call
+- **5 simultaneous art styles:** Cartoon, Flat Art, Anime, Pixel Art, Sketch
+- **Async generation** — each style generates sequentially to respect API rate limits, fully non-blocking UI
+- **Skeleton loaders** with shimmer sweep animation (not spinners)
+- **Download to gallery** and **native share sheet** for every generated image
+- **Before/After slider** — drag to compare original vs generated
+- **Background removal** via remove.bg API with toggle to restore original
 
-### Replicate — `fofr/face-to-many` model
-- Purpose-built for face style transfer (cartoon, anime, pixel, sketch, flat)
-- Free tier available with no credit card
-- ~$0.002 per image — extremely low cost for a demo
-- Returns a URL, not base64 — no large payload handling needed in the app
-- **Tradeoff**: Slower than DALL-E (30–90s per image) but significantly cheaper and more face-accurate
+### Bonus (beyond assessment requirements)
+- **Prompt customization** — text input to append a style hint to every generation prompt
+- **Style intensity control** — stepper UI that maps to the model's `style_strength_ratio` parameter (10–80 range)
+- **Result caching** — persistent JSON cache using expo-file-system with djb2 hashing. Same photo + same settings loads instantly on repeat with a visible ⚡ Cached badge so it's obvious to the user
+- **Single style deep-dive screen** — tap any result card to open a full-screen view of that style with its own progress bar, remove background, save, share, and before/after
+- **No-face detection** — friendly error screen when the model can't find a face, instead of a broken result
 
-### Vercel Serverless Backend
-- Keeps `REPLICATE_API_KEY` completely off the device — no key ever shipped in the APK
-- Zero cost on free tier for this usage level
-- Node 18 built-in `fetch` — zero dependencies
-- **Tradeoff**: Cold starts can add ~1–2s to the very first request
+---
 
-### Parallel Generation (all 5 at once)
-- All 5 `useGeneration` hooks fire simultaneously the moment the results screen mounts
-- Each hook manages its own `startGeneration` → polling loop independently
-- Progress bar reflects how many have completed out of 5
-- **Tradeoff**: 5 simultaneous Replicate predictions uses more credits vs sequential, but the UX is dramatically better — user sees results trickling in rather than waiting for all
+## Where I Got Stuck (and How I Solved It)
 
-### Image Processing
-- Client-side resize to **512×512** before upload using `expo-image-manipulator`
-- Compressed to JPEG at 85% quality
-- Keeps payload under ~200KB — well within Vercel's 4.5MB request limit
-- **Tradeoff**: Slight quality reduction vs sending the full-res original
+### 1. npm peer dependency conflict
+EAS builds kept failing with `ERESOLVE could not resolve react-dom@19.2.4`. Root cause: the lockfile was generated locally with `--legacy-peer-deps` but EAS runs plain `npm ci`. Fixed by deleting `node_modules`, regenerating the lockfile cleanly, and committing it before triggering the build.
 
-### Polling vs WebSockets
-- Polling at 3-second intervals chosen over WebSockets for simplicity
-- Replicate doesn't support WebSocket callbacks for predictions
-- 3s interval is responsive enough without hammering the API
-- Auto-stops after 6 minutes with a user-facing timeout message
+### 2. Background removal failing silently
+The `removeBg` endpoint kept returning 502 errors. Went through three iterations: wrong version hash → rate limited by Replicate (429) → switched to remove.bg API entirely. Final root cause was that Replicate's CDN URLs for generated images are access-restricted, so passing the URL directly to a second model never worked. Switched to downloading the image in the backend first, converting to base64, then sending raw pixels.
+
+### 3. Gradle build failing on style images
+EAS Gradle build failed with `AAPT: error: file failed to compile` on the style preview images. The PNG files sourced from the web had metadata or encoding that Android's resource compiler rejected. Fixed by reprocessing all 5 images through Pillow (Python) to produce clean, standard PNGs.
+
+### 4. APK vs AAB confusion
+First successful EAS build produced an `.aab` (Android App Bundle) which can't be sideloaded directly. Had to ensure `eas.json` preview profile explicitly set `buildType: apk` and run with `--profile preview` flag specifically.
+
+### 5. Splash screen logo mismatch
+The native splash screen (white background, from Android launcher) didn't match the in-app JS splash transition (dark background), causing a jarring flash. Fixed by using the actual `icon.png` asset in `SplashTransition.tsx` instead of rebuilding the logo with emoji characters, and setting `android.backgroundColor` in `app.json`.
 
 ---
 
 ## Tradeoffs Made
 
-| Decision | What we got | What we gave up |
-|----------|-------------|-----------------|
-| Expo managed workflow | Zero native config, fast setup | Less control over native modules |
-| Replicate over DALL-E | Lower cost, better face fidelity | Slower generation (30–90s vs 15s) |
-| Polling over webhooks | Simpler code, no additional infra | Slightly less real-time |
-| 512×512 compression | Fast uploads, no payload errors | Slightly lower source quality |
-| 5 parallel predictions | Fast perceived results, great UX | More API credit usage |
+### Sequential vs parallel generation
+The assessment preferred parallel generation of all 5 styles simultaneously. We chose sequential (one finishes → next starts) deliberately — the Replicate free tier rate limits concurrent requests, causing most parallel attempts to fail with 429. Sequential generation is slower but reliable. Noted in the UI with "Each style generates in sequence."
+
+### Replicate CDN URL caching
+The result cache stores Replicate output URLs, not local files. Replicate URLs are temporary CDN links that expire (hours to days). A more robust implementation would download each image to local storage on success. This was a conscious speed tradeoff — downloading 5 images on every generation would add significant time and storage.
+
+### Style intensity UX
+The model's `style_strength_ratio` parameter accepts 15–50. We expose a wider 10–80 range to the user (mapped internally) to give a more intuitive sense of "low to high" without exposing the model's internal constraints.
+
+### Icon cropping
+The Android adaptive icon crops slightly at the edges on some launchers. This is a known issue with the foreground image not having enough padding for the adaptive icon safe zone. A fixed `adaptive-icon.png` was generated and committed but a rebuild was not done before submission due to time constraints.
 
 ---
 
-## Bonus Features Implemented
+## Ideas I Wanted to Build But Couldn't
 
-- ✅ Batch generation — all 5 styles fire simultaneously
-- ✅ Skeleton loaders — pulsing animated placeholders (not spinners)
-- ✅ Per-card retry — individual style can be retried without redoing all
-- ✅ Progress bar — shows X/5 completed in real time
-- ✅ Save to gallery — downloads PNG to device gallery
-- ✅ Native share sheet — shares via any installed app
+### Face detection pre-check
+Wanted to run face detection client-side (using a TensorFlow.js model or expo-face-detector) before sending the image to the backend, so users get instant feedback if their photo won't work — instead of waiting 30+ seconds for the generation to fail. The hook infrastructure for `noFace` detection is already in place in `useGeneration.ts`, waiting for a pre-check layer.
+
+### Parallel generation with queue management
+A proper job queue on the backend (e.g. using Vercel KV or Upstash) would allow all 5 styles to be dispatched simultaneously with the backend managing retry logic, instead of the client orchestrating sequential calls.
+
+### SVG/vector output
+The assessment listed SVG output as a bonus. Genuinely difficult — the Replicate model outputs raster images. Would have required a separate raster-to-vector conversion step (e.g. using Potrace or a vector-tracing API) after generation.
+
+### Face consistency improvements
+Noticed that across the 5 styles, face likeness varies — some styles preserve facial features better than others. Wanted to experiment with higher `instant_id_strength` values per style but this trades off style intensity. No clean solution found within the time constraint.
 
 ---
 
 ## Security
 
-- API key stored only in Vercel environment variables — never in the app or repo
-- Input validation on both client (format, size) and server
-- Image size capped at ~1.5MB base64 on the backend
-- No user data stored — images are processed transiently by Replicate
+- No API keys in the mobile app — all Replicate and remove.bg keys live in Vercel environment variables
+- Input validation on the backend: image size capped at 2.5MB, style validated against a whitelist, prompt suffix capped at 120 chars
+- Vercel provides basic rate limiting at the infrastructure level
 
 ---
 
-## Submission Checklist
+## Code Structure
 
-- [ ] Android APK uploaded to Google Drive
-- [ ] APK link added to this README
-- [ ] Screen recording uploaded to Google Drive (shows upload → generation → download/share)
-- [ ] Screen recording link added to this README
-- [ ] App installs and runs on physical device
-- [ ] GitHub repo shared with clean commit history
-- [ ] README complete (this file)
+```
+clipart-project/
+├── mobile/
+│   ├── app/               # Expo Router screens
+│   │   ├── index.tsx      # Home — upload + style selection
+│   │   ├── results.tsx    # 2-col grid of all 5 styles
+│   │   └── single.tsx     # Full-screen single style view
+│   ├── components/
+│   │   ├── StyleResultCard.tsx   # Individual style card with all actions
+│   │   ├── SkeletonCard.tsx      # Shimmer loading skeleton
+│   │   ├── BeforeAfterSlider.tsx # Drag-to-compare modal
+│   │   └── SplashTransition.tsx  # App launch animation
+│   ├── hooks/
+│   │   └── useGeneration.ts      # Generation lifecycle + caching + polling
+│   ├── services/
+│   │   ├── api.ts                # Backend API calls
+│   │   └── cache.ts              # Persistent result cache
+│   ├── store/
+│   │   └── imageStore.ts         # In-memory image state
+│   └── constants/
+│       └── index.ts              # STYLES, COLORS design tokens
+└── backend/
+    └── api/
+        ├── generate.js    # Style generation via Replicate
+        ├── status.js      # Prediction polling
+        ├── removebg.js    # Background removal via remove.bg
+        └── index.js       # Health check
+```
+
+---
+
+## Known Issues & Areas of Improvement
+
+### 1. Status Bar / Edge-to-Edge Layout
+Some screens show text being overridden by the system status bar or navigation bar on certain Android devices. This was not present during development and testing on Expo Go — it only appeared after APK conversion, where Android's edge-to-edge enforcement behaves differently than the Expo development environment. Attempted a fix by setting `androidStatusBar` and `navigationBarColor` in `app.json` and updating `_layout.tsx`, and rebuilt the APK, but couldn't fully resolve it across all devices within the time constraint. A few more days would have been sufficient to test across multiple devices and fix this properly.
+
+### 2. App Icon Cropping
+The launcher icon appears slightly cropped on some Android home screens. This is an adaptive icon safe zone issue — the foreground image needs more padding to stay within the 66% safe zone that Android enforces. Again, this was not visible during Expo Go testing and only appeared post-APK. A corrected `adaptive-icon.png` was generated and committed to the repo but a final rebuild was not done before submission due to time constraints.
+
+### 3. More High-Signal Features With More Time
+Given a few more days, these features would have been added:
+- **Parallel generation** with a proper backend job queue instead of sequential client-side orchestration
+- **Client-side face detection** before upload so users get instant feedback instead of waiting 30+ seconds for a generation to fail
+- **SVG/vector output** via a raster-to-vector conversion step after generation
+- **Gallery of past generations** persisted across sessions
+- **Social sharing with a branded frame** around the generated clipart
