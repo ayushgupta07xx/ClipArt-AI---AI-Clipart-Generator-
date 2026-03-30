@@ -84,6 +84,9 @@ export default function HomeScreen() {
       );
       if (!result.base64) throw new Error('base64 encoding failed');
       setPickedImage({ uri: result.uri, base64: result.base64, mimeType: 'image/jpeg' });
+      // Clear any previously selected style so single screen doesn't show stale cache
+      const current = imageStore.get();
+      if (current) imageStore.set({ ...current, selectedStyleId: undefined });
     } catch {
       Alert.alert('Error', 'Could not process the image. Please try a different photo.');
     } finally {

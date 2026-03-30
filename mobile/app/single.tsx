@@ -60,7 +60,10 @@ export default function SingleScreen() {
   useEffect(() => {
     if (!stored || !style) { router.replace('/'); return; }
 
-    // Check cache on mount
+    // Reset on every mount — ensures new photo never shows old cached result
+    setCachedUrlState(null);
+    setFromCache(false);
+
     if (stored.base64) {
       const key = makeCacheKey(
         stored.base64,
@@ -72,7 +75,7 @@ export default function SingleScreen() {
         if (url) { setCachedUrlState(url); setFromCache(true); }
       });
     }
-  }, []);
+  }, [stored?.base64, styleId]);
 
   // Save to cache when generation succeeds
   useEffect(() => {
