@@ -8,7 +8,6 @@ Transform any face photo into 5 distinct art styles using AI. Built as a product
 
 - **APK Download:** [https://drive.google.com/file/d/1q9ELkmVCZnSpS2bW8RE_7YDF6e7Qh0aN/view?usp=drivesdk]
 - **Screen Recording:** [https://drive.google.com/file/d/1s2BFGYQmI7xn0WCK6aAKzvRPminSoFSB/view?usp=drivesdk]
-- **GitHub:** [ClipArt AI](https://github.com/ayushgupta07xx/ClipArt-AI---AI-Clipart-Generator-)
 - **Backend:** Deployed on Vercel
 
 ---
